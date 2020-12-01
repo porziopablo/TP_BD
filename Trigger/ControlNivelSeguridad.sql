@@ -1,6 +1,6 @@
 CREATE TRIGGER ControlNivelSeguridad
 ON TIENEASIGNADO
-FOR INSERT
+FOR INSERT, UPDATE
 AS 
 	declare @nivel_area INT
 	declare @nivel_empleado INT

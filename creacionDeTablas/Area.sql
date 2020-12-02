@@ -3,4 +3,5 @@ CREATE TABLE Area(
 	nombreArea nvarchar(30) NOT NULL,
 	numeroNivel int NOT NULL,
 	CONSTRAINT fk_nroNivel FOREIGN KEY(numeroNivel) REFERENCES NivelSeguridad(numeroNivel),
+	CONSTRAINT nombreAreaVacio CHECK (nombreArea != '')
 )

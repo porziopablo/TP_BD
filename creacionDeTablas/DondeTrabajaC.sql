@@ -6,5 +6,7 @@ CREATE TABLE DondeTrabajaC(
 	descripcionTrabajo nvarchar(50),
 	PRIMARY KEY(numeroEmpleado, fechaInicioTrabajo),
 	CONSTRAINT fk_DondeTrabajaC_nroArea FOREIGN KEY(numeroArea) REFERENCES Area(numeroArea),
-	CONSTRAINT fk_DondeTrabajaC_nroEmpleado FOREIGN KEY(numeroEmpleado) REFERENCES Empleado(numeroEmpleado)
+	CONSTRAINT fk_DondeTrabajaC_nroEmpleado FOREIGN KEY(numeroEmpleado) REFERENCES Empleado(numeroEmpleado),
+	CONSTRAINT descTrabajoVacio CHECK (descripcionTrabajo != ''),
+	CONSTRAINT fechasValidas CHECK (fechaFinTrabajo > fechaInicioTrabajo)
 )

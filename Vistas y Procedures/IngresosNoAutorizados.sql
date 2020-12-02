@@ -10,7 +10,7 @@ BEGIN
 	FROM EMPLEADO E
 	WHERE E.numeroEmpleado IN (SELECT ENP.numeroEmpleado
 								FROM SEMUEVEEN SM,AREA A, EMPLEADONOPROFESIONAL ENP
-								WHERE SM.resultadoMov = 'no autorizado' AND SM.numeroEmpleado = ENP.numeroEmpleado AND SM.numeroArea = A.numeroArea 
+								WHERE SM.resultadoMov = 'no autorizado' AND SM.tipoMov = 'ingreso' AND SM.numeroEmpleado = ENP.numeroEmpleado AND SM.numeroArea = A.numeroArea 
 								AND A.numeroNivel != ENP.numeroNivel )
 		  OR E.numeroEmpleado IN (  SELECT SME.numeroEmpleado
 									FROM SEMUEVEEN SME

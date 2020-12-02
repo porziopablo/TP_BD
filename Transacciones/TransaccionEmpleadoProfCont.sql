@@ -24,6 +24,16 @@ BEGIN TRY
            ([numeroEmpleado])
     VALUES(@EmpleadoID);
 
+	-- Se le asigna un area donde trabajará
+	INSERT INTO [dbo].[DondeTrabajaC]
+           ([numeroEmpleado]
+           ,[fechaInicioTrabajo]
+           ,[fechaFinTrabajo]
+           ,[numeroArea]
+           ,[descripcionTrabajo])
+     VALUES
+           (@EmpleadoID,'fechaInicioTrabajo','fechaFinTrabajo','numeroArea','descripcionTrabajo')
+
 	COMMIT TRANSACTION
 END TRY
 

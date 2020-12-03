@@ -12,3 +12,5 @@ CREATE TABLE SeMueveEn(
 	CONSTRAINT fechaMovInvalida CHECK  (fechaHoraMov<getdate()),
 	CONSTRAINT movimientoInvalido CHECK ((tipoMov = 'egreso' AND resultadoMov = 'autorizado') OR (tipoMov = 'ingreso'))
 )
+
+create nonclustered index I_resultado on SeMueveEn(resultadoMov);

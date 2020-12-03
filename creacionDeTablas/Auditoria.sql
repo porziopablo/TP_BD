@@ -1,7 +1,7 @@
 CREATE TABLE Auditoria(
 	numeroEmpleado int NOT NULL,
 	fechaInicioTrabajo date NOT NULL, /* YYYY-MM-DD */
-	numeroAuditoria int NOT NULL,
+	numeroAuditoria int identity NOT NULL,
 	fechaHoraAuditoria datetime NOT NULL,
 	resultadoAuditoria nvarchar(20),
 	PRIMARY KEY(numeroEmpleado, fechaInicioTrabajo, numeroAuditoria),

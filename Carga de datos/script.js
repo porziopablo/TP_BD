@@ -1,6 +1,6 @@
 const config = require('./config.json');
 const loteDatos = require('./lote_datos.json');
-
+const transacciones = require('./transacciones.json');
 const sql = require('mssql')
 const poolPromise = sql.connect(config)
 
@@ -10,13 +10,6 @@ const INSERT_NIVELSEG = "INSERT INTO NivelSeguridad(tipoNivel) VALUES ";
 const INSERT_FRANJAHORARIA = "INSERT INTO FranjaHoraria(horaInicio, horaFin) VALUES ";
 const INSERT_AREA = "INSERT INTO Area(nombreArea, numeroNivel) VALUES ";
 const INSERT_EVENTO = "INSERT INTO Evento(numeroArea, descripcionEvento, fechaHoraEvento) VALUES ";
-const INSERT_EMPLEADO = "INSERT INTO Empleado(nombreEmpleado, apellidoEmpleado, funcionEmpleado, contrasena, huellaDactilar) VALUES ";
-const INSERT_EMPLEADO_JER = "INSERT INTO EmpleadoJerarquico(numeroEmpleado, fechaInicio, numeroArea) VALUES ";
-const INSERT_EMPLEADO_PROF = "INSERT INTO EmpleadoProfesional(numeroEmpleado, contratacionProfesional, numeroEspecialidad) VALUES ";
-const INSERT_EMPLEADO_NOPROF = "INSERT INTO EmpleadoNoProfesional(numeroEmpleado, numeroNivel) VALUES ";
-const INSERT_EMPLEADO_CONT = "INSERT INTO EmpleadoContratado(numeroEmpleado) VALUES ";
-const INSERT_EMPLEADO_PERM = "INSERT INTO EmpleadoPermanente(numeroEmpleado, numeroArea) VALUES ";
-const INSERT_DONDETRABAJAC = "INSERT INTO DondeTrabajaC(numeroEmpleado, fechaInicioTrabajo,fechaFinTrabajo,numeroArea,descripcionTrabajo) VALUES ";
 const INSERT_AUDITORIA = "INSERT INTO Auditoria(numeroEmpleado, fechaInicioTrabajo, fechaHoraAuditoria, resultadoAuditoria) VALUES "
 const INSERT_SEMUEVEEN = "INSERT INTO SeMueveEn(numeroArea,numeroEmpleado, fechaHoraMov, resultadoMov, tipoMov) VALUES ";
 const INSERT_TIENEASIGNADO = "INSERT INTO TieneAsignado(numeroArea, numeroEmpleado, numeroFranja) VALUES ";
@@ -41,7 +34,7 @@ async function main() {
     const cantidadAsignaciones = 5;
    
 
-    await poolPromise.then(async () => { //ya me conecte a la bd
+    await poolPromise.then(async (pool) => { //ya me conecte a la bd
         //Genero e inserto TODAS las especialidades
         const queryInsertEspecialidades = INSERT_ESPECIALIDAD + generarInsertMultipleEspecialidad() + FINAL;
         await sql.query(queryInsertEspecialidades).catch(err => {
@@ -76,24 +69,21 @@ async function main() {
         console.log(queryInsertAreas);
         console.log("Areas insertadas.")
 
-        //Genero e inserto N empleados
-        await insertarEmpleados(cantidadEmpleados);
-        console.log("Empleados insertados.")
-
-        //Selecciono los empleados que se insertaron y creo el resto de tablas de empleados segun sus funciones
-        //Para esto necesito 4 arrays: niveles (que ya los tengo)  y  areas,empleados y especialidades
+        //Inserto empleados y creo el resto de tablas de empleados segun sus funciones
+        //Para esto necesito 4 arrays: niveles (que ya los tengo)  y  areas y especialidades
         const arrayFKAreas = await sql.query(SELECT_FK_AREAS).then(result => {
             return result.recordset.map(a => a.numeroArea);
-        });
-        const arrayEmpleados = await sql.query(SELECT_FK_EMPLEADOS).then(result => {
-            return result.recordset;
         });
         const arrayEspecialidades = await sql.query(SELECT_FK_ESPECIALIDAD).then(result => {
             return result.recordset.map(a => a.numeroEspecialidad);
         });
+        await insertarEmpleados(pool, cantidadEmpleados, arrayFKAreas, arrayFKNiveles, arrayEspecialidades);
+        console.log("Empleados y sus funciones insertados.")
 
-        await insertarFuncionesEmpleados(arrayEmpleados, arrayFKAreas, arrayFKNiveles, arrayEspecialidades);
-        console.log("Funciones de los empleados insertados.")
+        //Recupero array con empleados para uso posterior
+        const arrayEmpleados = await sql.query(SELECT_FK_EMPLEADOS).then(result => {
+            return result.recordset;
+        });
 
         //Obtengo las areas para poder insertar N eventos
         await insertarEventos(cantidadEventos, arrayFKAreas);
@@ -123,12 +113,98 @@ async function main() {
 
 async function testQuery(query) {
     await poolPromise.then(async () => { //ya me conecte a la bd
-        const resultado = sql.query(query).then(result => {
+        const resultado = await sql.query(query).then(result => {
             return result; //.recordset
         });
         console.log(resultado);
+    }).catch(err => {
+        console.log("ERROR " + err);
     });
     process.exit();
+}
+
+async function insertarEmpleados(pool, cantidadEmpleados, arrayFKAreas, arrayFKNiveles, arrayEspecialidades) {
+    let i = 0;
+    let resultadoAct, queryAct, randomAct, fechaRandomPasada, numeroAreaAct, especialidadAct, dondeTrabajaCact;
+    const huellas = loteDatos.hashes;
+    while (i < cantidadEmpleados) {
+        randomAct = Math.floor(Math.random() * 4) + 1;
+        console.log(randomAct);
+        resultadoAct = generarEmpleado();
+        switch (randomAct) {
+            case 1:
+                queryAct = transacciones.transaccionEmpleadoJerarquico;
+                numeroAreaAct = arrayFKAreas[Math.floor(Math.random() * arrayFKAreas.length)];
+                fechaRandomPasada = randomDate(new Date(1980, 0, 1), new Date(), 0, 24);
+                await pool.request()
+                    .input("input_nombre", sql.NVarChar(30), resultadoAct.nombreEmpleado)
+                    .input("input_apellido", sql.NVarChar(30), resultadoAct.apellidoEmpleado)
+                    .input("input_funcion", sql.NVarChar(20), "jerarquico")
+                    .input("input_contrasena", sql.NVarChar(30), resultadoAct.contrasenaEmpleado)
+                    .input("input_huella", sql.NVarChar(30), huellas[Math.floor(Math.random() * huellas.length)] + Math.floor(Math.random() * 1577).toString())
+                    .input("input_fechaInicio", sql.Date, fechaRandomPasada)
+                    .input("input_numeroArea", sql.Int, numeroAreaAct)
+                    .query(queryAct).catch(err => {
+                        console.log("Error en la transaccion empleado jerarquico: " + err);
+                    });
+                break;
+            case 2:
+                queryAct = transacciones.transaccionEmpleadoNoProf;
+                numeroNivelAct = arrayFKNiveles[Math.floor(Math.random() * arrayFKNiveles.length)];
+                await pool.request()
+                    .input("input_nombre", sql.NVarChar(30), resultadoAct.nombreEmpleado)
+                    .input("input_apellido", sql.NVarChar(30), resultadoAct.apellidoEmpleado)
+                    .input("input_funcion", sql.NVarChar(20), "no profesional")
+                    .input("input_contrasena", sql.NVarChar(30), resultadoAct.contrasenaEmpleado)
+                    .input("input_huella", sql.NVarChar(30), huellas[Math.floor(Math.random() * huellas.length)] + Math.floor(Math.random() * 1577).toString())
+                    .input("input_numeroNivel", sql.Int, numeroNivelAct)
+                    .query(queryAct).catch(err => {
+                        console.log("Error en la transaccion empleado no profesional: " + err);
+                    });
+                break;
+            case 3:
+                queryAct = transacciones.transaccionEmpleadoProfCont;
+                numeroAreaAct = arrayFKAreas[Math.floor(Math.random() * arrayFKAreas.length)];
+                fechaRandomPasada = randomDate(new Date(1980, 0, 1), new Date(), 0, 24);
+                especialidadAct = arrayEspecialidades[Math.floor(Math.random() * arrayEspecialidades.length)];
+                dondeTrabajaCact = generarDondeTrabajaC(arrayFKAreas);
+                await pool.request()
+                    .input("input_nombre", sql.NVarChar(30), resultadoAct.nombreEmpleado)
+                    .input("input_apellido", sql.NVarChar(30), resultadoAct.apellidoEmpleado)
+                    .input("input_funcion", sql.NVarChar(20), "profesional")
+                    .input("input_contrasena", sql.NVarChar(30), resultadoAct.contrasenaEmpleado)
+                    .input("input_huella", sql.NVarChar(30), huellas[Math.floor(Math.random() * huellas.length)] + Math.floor(Math.random() * 1577).toString())
+                    .input("input_contratacionProfesional", sql.NVarChar(20), "contratado")
+                    .input("input_numeroEspecialidad", sql.Int, especialidadAct)
+                    .input("input_fechaInicioTrabajo", sql.Date, dondeTrabajaCact.fechaInicioTrabajo)
+                    .input("input_fechaFinTrabajo", sql.Date, dondeTrabajaCact.fechaFinTrabajo)
+                    .input("input_numeroArea", sql.Int, dondeTrabajaCact.numeroArea)
+                    .input("input_descripcionTrabajo", sql.NVarChar(50), dondeTrabajaCact.descripcionTrabajo)
+                    .query(queryAct).catch(err => {
+                        console.log("Error en la transaccion empleado prof. contratado: " + err);
+                    });
+                break;
+            case 4:
+                queryAct = transacciones.transaccionEmpleadoProfPerm;
+                numeroAreaAct = arrayFKAreas[Math.floor(Math.random() * arrayFKAreas.length)];
+                especialidadAct = arrayEspecialidades[Math.floor(Math.random() * arrayEspecialidades.length)];
+                await pool.request()
+                    .input("input_nombre", sql.NVarChar(30), resultadoAct.nombreEmpleado)
+                    .input("input_apellido", sql.NVarChar(30), resultadoAct.apellidoEmpleado)
+                    .input("input_funcion", sql.NVarChar(20), "profesional")
+                    .input("input_contrasena", sql.NVarChar(30), resultadoAct.contrasenaEmpleado)
+                    .input("input_huella", sql.NVarChar(30), huellas[Math.floor(Math.random() * huellas.length)] + Math.floor(Math.random() * 1577).toString())
+                    .input("input_contratacionProfesional", sql.NVarChar(20), "permanente")
+                    .input("input_numeroEspecialidad", sql.Int, especialidadAct)
+                    .input("input_numeroArea", sql.Int, numeroAreaAct)
+                    .query(queryAct).catch(err => {
+                        console.log("Error en la transaccion empleado prof. permanente: " + err);
+                    });
+                break;
+        }
+
+        i++;
+    }
 }
 
 function insertarTieneAsignado(cantidadAsignaciones, arrayFKAreas, arrayEmpleados, arrayFranjas) {
@@ -191,83 +267,6 @@ function insertarEventos(cantidadEventos, fkAreas) {
             console.log("Error insertando evento: " + err);
         });
         console.log(queryAct);
-        i++;
-    }
-}
-
-async function insertarEmpleados(cantidadEmpleados) {
-    let i = 0;
-    let resultadoAct;
-    let queryAct;
-    const huellas = loteDatos.hashes;
-    while (i < cantidadEmpleados) {
-        resultadoAct = generarEmpleado();
-        queryAct = INSERT_EMPLEADO + "('" + resultadoAct.nombreEmpleado + "','" + resultadoAct.apellidoEmpleado +
-            "','" + resultadoAct.funcionEmpleado + "','" + resultadoAct.contrasenaEmpleado + "','" +
-            huellas[i] + "')" + FINAL;
-        sql.query(queryAct).catch(err => {
-            console.log("Error insertando empleado: " + err);
-        });
-        i++;
-    }
-}
-
-
-async function insertarFuncionesEmpleados(arrayEmpleados, arrayFKAreas, arrayFKNiveles, arrayEspecialidades) {
-    let i = 0;
-    let queryAct;
-    let empleadoAct, especialidadAct, contratProfAct, numeroAreaAct, numeroNivelAct, dondeTrabajaCact;
-    const contrataciones = loteDatos.contratProf;
-    while (i < arrayEmpleados.length) {
-        empleadoAct = arrayEmpleados[i];
-        if (empleadoAct.funcionEmpleado == "jerarquico") {
-            numeroAreaAct = arrayFKAreas[Math.floor(Math.random() * arrayFKAreas.length)];
-            fechaRandomPasada = randomDate(new Date(1980, 0, 1), new Date(), 0, 24);
-            queryAct = INSERT_EMPLEADO_JER + "(" + empleadoAct.numeroEmpleado + ",'" + fechaRandomPasada.split(' ')[0] + "'," + numeroAreaAct + ")" + FINAL;
-            sql.query(queryAct).catch(err => {
-                console.log("Error insertando empleado jerarquico: " + err);
-            });
-            console.log(queryAct);
-        }
-        else if (empleadoAct.funcionEmpleado == "profesional") {
-            contratProfAct = contrataciones[Math.floor(Math.random() * contrataciones.length)];
-            especialidadAct = arrayEspecialidades[Math.floor(Math.random() * arrayEspecialidades.length)];
-            queryAct = INSERT_EMPLEADO_PROF + "(" + empleadoAct.numeroEmpleado + ",'" + contratProfAct + "'," + especialidadAct + ")" + FINAL;
-            sql.query(queryAct).catch(err => {
-                console.log("Error insertando empleado profesional: " + err);
-            });
-            console.log(queryAct);
-            if (contratProfAct == "contratado") {
-                queryAct = INSERT_EMPLEADO_CONT + "(" + empleadoAct.numeroEmpleado + ")" + FINAL;
-                sql.query(queryAct).catch(err => {
-                    console.log("Error insertando empleado contratado: " + err);
-                });
-                console.log(queryAct);
-                dondeTrabajaCact = generarDondeTrabajaC(arrayFKAreas);
-                queryAct = INSERT_DONDETRABAJAC + "(" + empleadoAct.numeroEmpleado + ",'" + dondeTrabajaCact.fechaInicioTrabajo +
-                    "','" + dondeTrabajaCact.fechaFinTrabajo + "'," + dondeTrabajaCact.numeroArea + ",'" + dondeTrabajaCact.descripcionTrabajo + "')" + FINAL;
-                sql.query(queryAct).catch(err => {
-                    console.log("Error insertando DondeTrabajaC: " + err);
-                });
-                console.log(queryAct);
-            }
-            else { //permanente
-                numeroAreaAct = arrayFKAreas[Math.floor(Math.random() * arrayFKAreas.length)];
-                queryAct = INSERT_EMPLEADO_PERM + "(" + empleadoAct.numeroEmpleado + "," + numeroAreaAct + ")" + FINAL;
-                sql.query(queryAct).catch(err => {
-                    console.log("Error insertando empleado permanente: " + err);
-                });
-                console.log(queryAct);
-            }
-        }
-        else { //no prof
-            numeroNivelAct = arrayFKNiveles[Math.floor(Math.random() * arrayFKNiveles.length)];
-            queryAct = INSERT_EMPLEADO_NOPROF + "(" + empleadoAct.numeroEmpleado + "," + numeroNivelAct + ")" + FINAL;
-            sql.query(queryAct).catch(err => {
-                console.log("Error insertando empleado no profesional: " + err);
-            });
-            console.log(queryAct);
-        }
         i++;
     }
 }
@@ -444,3 +443,4 @@ function formatDateToYMD(date) {
 
 
 main();
+//testQuery("aa");

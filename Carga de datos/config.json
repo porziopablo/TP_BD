@@ -2,6 +2,6 @@
 	"user": "martin",
 	"password": "martin",
 	"server": "DESKTOP-LUS58EQ",
-	"database": "TPDB",
+	"database": "Test",
 	"port": 1433
 }

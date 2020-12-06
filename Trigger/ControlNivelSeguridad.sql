@@ -2,7 +2,7 @@ CREATE TRIGGER ControlNivelSeguridad
 ON TIENEASIGNADO
 FOR INSERT, UPDATE
 AS 
-	IF EXIST (SELECT inserted.*
+	IF EXISTS (SELECT inserted.*
 				FROM inserted,AREA A,EMPLEADONOPROFESIONAL ENP
 				WHERE inserted.numeroEmpleado = ENP.numeroEmpleado AND inserted.numeroArea = A.numeroArea AND 
 					ENP.numeroNivel != A.numeroNivel)

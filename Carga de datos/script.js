@@ -107,8 +107,10 @@ async function main() {
         //Genero e inserto tuplas de TieneAsignado
         await insertarTieneAsignado(cantidadAsignaciones, arrayFKAreas, arrayEmpleados.map(a => a.numeroEmpleado), arrayFranjas);
         console.log("TieneAsignado insertados.");
+
+        
     });
-    process.exit();
+
 }
 
 async function testQuery(query) {
@@ -129,7 +131,6 @@ async function insertarEmpleados(pool, cantidadEmpleados, arrayFKAreas, arrayFKN
     const huellas = loteDatos.hashes;
     while (i < cantidadEmpleados) {
         randomAct = Math.floor(Math.random() * 4) + 1;
-        console.log(randomAct);
         resultadoAct = generarEmpleado();
         switch (randomAct) {
             case 1:
@@ -352,6 +353,7 @@ function generarSeMueveEn(arrayAreas, arrayEmpleados) {
 function generarAuditoria(arrayDondeTrabajaC) {
     const resultados = loteDatos.resultadosAud;
     const randomDondeTrabajaC = arrayDondeTrabajaC[Math.floor(Math.random() * arrayDondeTrabajaC.length)];
+    console.log(randomDondeTrabajaC);
     let resultado = {
         "numeroEmpleado": randomDondeTrabajaC.numeroEmpleado,
         "fechaInicioTrabajo": formatDateToYMD(randomDondeTrabajaC.fechaInicioTrabajo),

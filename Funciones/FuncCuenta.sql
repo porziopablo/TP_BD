@@ -1,0 +1,15 @@
+CREATE FUNCTION CUENTA(@texto ntext)
+
+RETURNS INT
+
+AS
+	BEGIN
+		DECLARE @OK INT
+
+		IF 0 < (DATALENGTH(@texto))
+			SET @OK = 1
+		ELSE
+			SET @OK = 0
+
+		RETURN @OK
+	END

@@ -24,10 +24,22 @@ BEGIN TRY
            ([numeroEmpleado])
     VALUES(@EmpleadoID);
 
+	-- Se le asigna un area donde trabajará
+	INSERT INTO [dbo].[DondeTrabajaC]
+           ([numeroEmpleado]
+           ,[fechaInicioTrabajo]
+           ,[fechaFinTrabajo]
+           ,[numeroArea]
+           ,[descripcionTrabajo])
+     VALUES
+           (@EmpleadoID,'fechaInicioTrabajo','fechaFinTrabajo','numeroArea','descripcionTrabajo')
+
 	COMMIT TRANSACTION
 END TRY
 
 BEGIN CATCH
-    ROLLBACK TRANSACTION
-    PRINT 'Ha ocurrido un error!'
+    ROLLBACK TRANSACTION;
+	DECLARE @MsjError VARCHAR(200);
+	SET @MsjError = ERROR_MESSAGE();
+    RAISERROR(@MsjError,18,1);
 END CATCH

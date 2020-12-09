@@ -9,7 +9,7 @@ WHERE EXISTS (SELECT *
 			  FROM SeMueveEn MOV1
 			  WHERE MOV1.fechaHoraMov >= DATEADD(day, DATEDIFF(day,0,GETDATE()),0) AND -- día actual a las 00:00 hs.
 					MOV1.numeroEmpleado = E.numeroEmpleado AND MOV1.numeroArea = A.numeroArea AND
-					MOV1.tipoMov = 'ingreso' AND MOV1.resultadoMov = 'no autorizado' AND
+					MOV1.resultadoMov = 'no autorizado' AND
 					NOT EXISTS (SELECT *
 								FROM SeMueveEn MOV2
 								WHERE MOV2.fechaHoraMov >= MOV1.fechaHoraMov AND

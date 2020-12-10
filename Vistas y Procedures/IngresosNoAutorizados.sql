@@ -6,7 +6,7 @@ CREATE PROCEDURE IngresosNoAutorizados
 	@INTENTOS INT
 AS
 BEGIN
-	SELECT E.nombreEmpleado,E.apellidoEmpleado,E.funcionEmpleado
+	SELECT E.numeroEmpleado, E.nombreEmpleado,E.apellidoEmpleado,E.funcionEmpleado
 	FROM EMPLEADO E
 	WHERE E.numeroEmpleado IN (SELECT ENP.numeroEmpleado
 								FROM SEMUEVEEN SM,AREA A, EMPLEADONOPROFESIONAL ENP

@@ -1,0 +1,61 @@
+								INSTRUCCIONES DE USO
+
+TRABAJO FINAL - BASE DE DATOS - FI-UNMDP - 2020
+GRUPO 3 - SQL-SERVER
+
+TUTORES:
+	SRECKO ESTANISLAO MILETA
+	EMILIANO FUNES
+
+ALUMNOS:
+	IVAN APREA
+	MARTIN CASAS
+	MARIQUENA GROS
+	PABLO PORZIO
+
+######################################################################################################################################################
+
+									NOTAS
+
+- Se requiere tener instalado Microsoft SQL-SERVER, y Microsoft SQL Server Management Studio
+	- https://www.microsoft.com/en-us/sql-server/sql-server-downloads
+	- https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver15
+
+- Se requiere tener instalado Node.js para ejecutar el script de carga de datos
+	- https://nodejs.org/en/download/
+
+- En la carpeta Test existen algunos scripts SQL de Insert para generar ejemplos para las vistas y procedures. 
+  Se deben cambiar datos de empleado y áreas acordemente a lo generado por el script de carga.
+
+- La carpeta Transacciones sólo muestra borradores del código SQL usado por el script de carga para insertar empleados.
+
+- incializador.sql reune el código SQL provisto en las carpetas de funciones, creación de tablas, vistas, procedures y triggers en un sólo archivo.
+
+######################################################################################################################################################
+
+									PASOS
+
+1 - Crear BD en SQL-SERVER
+
+2 - Ejecutar inicializador.sql para crear tablas, triggers, vistas, procedures y funciones. 
+
+3 - Configurar SQL-SERVER para que pueda ser accedido remotamente
+	- Link: http://campus.zoologic.com.ar/erakb/tycg/tycg_configurar_sql_server_para_adm_2.htm
+
+4 - Configurar config.json para acceder a BD desde script
+
+	{
+		"user": "nombre de usuario creado en paso 3",
+		"password": "contraseña de usuario usada en paso 3",
+		"server": "nombre de servidor SQL-SERVER",
+		"database": "nombre de BD",
+		"port": 1433
+	}
+
+5 - Instalar librería node-mssql en directorio donde se ejecutará el script de carga
+	- Link: https://www.npmjs.com/package/mssql
+	- Para instalarlo, ejecutar en CMD teniendo como directorio actual el del script: npm i mssql
+
+6 - Ejecutar script de carga desde CMD: node script.js 
+
+######################################################################################################################################################
